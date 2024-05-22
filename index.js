@@ -50,6 +50,7 @@ async function run() {
         const doctorsPortalCollection = client.db('doctorsPortal').collection('DentalServices')
         const treatmentCollection = client.db('doctorsPortal').collection('TreatmentServices')
         const usersCollection = client.db('doctorsPortal').collection('usersServices')
+        const doctorsCollection = client.db('doctorsPortal').collection('doctors')
 
 
         const verifyAdmin = async (req, res, next) => {
@@ -136,6 +137,13 @@ async function run() {
         // app.patch('/bookings/:id', (req, res))
         // app.delete('/bookings/:id', (req, res))
 
+        app.get('/specially', async (req, res) => {
+            const query = {};
+            const result = await doctorsPortalCollection.find(query).project({ name: 1 }).toArray();
+            res.send(result);
+
+        })
+
         app.get('/bookings', verifyJWT, async (req, res) => {
             const email = req.query?.email;
             const decodedEmail = req.decoded?.email;
@@ -208,6 +216,25 @@ async function run() {
                 }
             };
             const result = await usersCollection.updateOne(filter, updatedDoc, options)
+            res.send(result);
+        })
+
+        app.get('/doctors', verifyJWT, verifyAdmin, async (req, res) => {
+            const query = {};
+            const doctors = await doctorsCollection.find(query).toArray();
+            res.send(doctors);
+        })
+
+        app.post('/doctors', verifyJWT, verifyAdmin, async (req, res) => {
+            const doctor = req.body;
+            const result = await doctorsCollection.insertOne(doctor)
+            res.send(result);
+        })
+
+        app.delete('/doctors/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await doctorsCollection.deleteOne(query)
             res.send(result);
         })
 
